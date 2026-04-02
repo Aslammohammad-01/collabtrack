@@ -1,0 +1,115 @@
+# CollabTrack — GUI Deploy Guide (No CLI)
+# ════════════════════════════════════════════════════════════
+
+TOTAL TIME: ~15 minutes
+COST: Free (Cloudflare free tier)
+
+
+══════════════════════════════════════════
+STEP 1 — Create KV Namespace
+══════════════════════════════════════════
+
+1. Go to https://dash.cloudflare.com
+2. Left sidebar → "Workers & Pages" → "KV"
+3. Click "Create a namespace"
+4. Name it:  collabtrack-kv
+5. Click "Add"
+6. NOTE DOWN the Namespace ID shown (you'll need it in Step 3)
+
+
+══════════════════════════════════════════
+STEP 2 — Create the Worker
+══════════════════════════════════════════
+
+1. Left sidebar → "Workers & Pages" → "Overview"
+2. Click "Create application" → "Create Worker"
+3. Name it:  collabtrack-worker
+4. Click "Deploy" (ignore the hello world code for now)
+5. Click "Edit code" on the next screen
+6. SELECT ALL the existing code and DELETE it
+7. PASTE the entire contents of  worker/worker.js
+8. Click "Save and Deploy"
+9. NOTE DOWN the Worker URL shown (e.g. collabtrack-worker.yourname.workers.dev)
+
+
+══════════════════════════════════════════
+STEP 3 — Add KV Binding to Worker
+══════════════════════════════════════════
+
+1. In your Worker page → click "Settings" tab
+2. Scroll to "KV Namespace Bindings" → click "Add binding"
+3. Fill in:
+     Variable name:  COLLABTRACK_KV
+     KV namespace:   collabtrack-kv   (select from dropdown)
+4. Click "Save"
+
+
+══════════════════════════════════════════
+STEP 4 — Add Secret Variables
+══════════════════════════════════════════
+
+Still in Worker Settings → scroll to "Environment Variables"
+Click "Add variable" for EACH of these (check "Encrypt" for both):
+
+  Variable 1:
+    Name:    AUTH_PASSWORD
+    Value:   (choose your own password — you'll use this to log in)
+    ✅ Check "Encrypt"
+
+  Variable 2:
+    Name:    JWT_SECRET
+    Value:   (paste a random 40+ character string — generate one at
+              https://generate.plus/en/alphanumeric?length=48)
+    ✅ Check "Encrypt"
+
+Click "Save and Deploy" after adding both.
+
+
+══════════════════════════════════════════
+STEP 5 — Update Frontend with Worker URL
+══════════════════════════════════════════
+
+1. Open  frontend/index.html  in any text editor
+2. Find this line (near the bottom, in the <script> section):
+
+     return 'PASTE_YOUR_WORKER_URL_HERE';
+
+3. Replace it with your Worker URL from Step 2, e.g.:
+
+     return 'https://collabtrack-worker.yourname.workers.dev';
+
+4. Save the file.
+
+
+══════════════════════════════════════════
+STEP 6 — Deploy Frontend to Cloudflare Pages
+══════════════════════════════════════════
+
+1. Left sidebar → "Workers & Pages" → "Overview"
+2. Click "Create application" → "Pages" tab → "Upload assets"
+3. Name your project:  collabtrack
+4. Click "Select from computer" and upload the entire  frontend/  folder
+   (It contains: index.html, _headers, _redirects)
+5. Click "Deploy site"
+6. Your app URL will be:  https://collabtrack.pages.dev
+   (or your custom domain if you add one)
+
+
+══════════════════════════════════════════
+DONE! Open your Pages URL and log in.
+══════════════════════════════════════════
+
+
+── SECURITY NOTES ──────────────────────────────────────────
+• Your password is never stored in the frontend code
+• JWT tokens last 30 days, stored in sessionStorage only
+  (automatically cleared when browser tab closes)
+• Commercial amounts & POC details are hidden behind the 👁 button
+• All data is encrypted at rest in Cloudflare KV
+• HTTPS is enforced automatically — no HTTP possible
+• Security headers (X-Frame-Options, HSTS etc) applied via _headers
+
+── FUTURE UPDATES ──────────────────────────────────────────
+• Worker changes: Edit code in dashboard → Save and Deploy
+• Frontend changes: Go to your Pages project → Deployments
+  → click "Upload assets" again and re-upload the folder
